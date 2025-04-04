@@ -28,23 +28,28 @@
             </div>
   
             <div class="form-group cpfcnpj">
-              <label v-if="pessoaEditada.tipoPessoa === 'FISICA'">CPF*</label>
+              <label v-show="pessoaEditada.tipoPessoa === 'FISICA'">CPF*</label>
               <input
-                v-if="pessoaEditada.tipoPessoa === 'FISICA'"
-                v-mask="'###.###.###-##'"
+                v-show="pessoaEditada.tipoPessoa === 'FISICA'"
+                @input="pessoaEditada.cpf = formatarCPF($event.target.value)"
                 type="text"
                 v-model="pessoaEditada.cpf"
                 class="input"
-                required
+                :required="pessoaEditada.tipoPessoa === 'FISICA'"
+                maxlength="14"
+                inputmode="numeric"
               />
-              <label v-else>CNPJ*</label>
+              
+              <label v-show="pessoaEditada.tipoPessoa === 'JURIDICA'">CNPJ*</label>
               <input
-                v-else
-                v-mask="'##.###.###/####-##'"
+                v-show="pessoaEditada.tipoPessoa === 'JURIDICA'"
+                @input="pessoaEditada.cnpj = formatarCNPJ($event.target.value)"
                 type="text"
                 v-model="pessoaEditada.cnpj"
                 class="input"
                 required
+                maxlength="18"
+                inputmode="numeric"
               />
             </div>
   
@@ -52,11 +57,13 @@
               <label>CEP</label>
               <input
                 type="text"
-                v-mask="'#####-###'"
+                @input="pessoa.cep = formatarCEP($event.target.value)"
                 v-model="pessoaEditada.cep"
                 class="input"
                 required
                 @blur="buscarCep"
+                maxlength="9"
+                inputmode="numeric"
               />
             </div>
   
@@ -135,6 +142,29 @@
           console.error('Erro ao atualizar pessoa:', error)
         }
       },
+      formatarCPF(valor) {
+        valor = valor.replace(/\D/g, '')
+        if (valor.length > 11) valor = valor.slice(0, 11)
+        valor = valor.replace(/(\d{3})(\d)/, '$1.$2')
+        valor = valor.replace(/(\d{3})(\d)/, '$1.$2')
+        valor = valor.replace(/(\d{3})(\d{1,2})$/, '$1-$2')
+        return valor
+      },
+      formatarCNPJ(valor) {
+        valor = valor.replace(/\D/g, '')
+        if (valor.length > 14) valor = valor.slice(0, 14)
+        valor = valor.replace(/^(\d{2})(\d)/, '$1.$2')
+        valor = valor.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
+        valor = valor.replace(/\.(\d{3})(\d)/, '.$1/$2')
+        valor = valor.replace(/(\d{4})(\d)/, '$1-$2')
+        return valor
+      },
+      formatarCEP(valor) {
+        valor = valor.replace(/\D/g, '')
+        if (valor.length > 8) valor = valor.slice(0, 8)
+        valor = valor.replace(/(\d{5})(\d)/, '$1-$2')
+        return valor
+      },
     },
   }
   </script>
@@ -201,6 +231,10 @@
   .form-group {
     display: flex;
     flex-direction: column;
+  }
+
+  .cpfcnpj label {
+    min-height: 20px;
   }
   
   .input {

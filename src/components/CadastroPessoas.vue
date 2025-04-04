@@ -36,7 +36,7 @@
               :class="{ 'linha-cinza': index % 2 === 0 }"
             >
               <td>{{ pessoa.nome }}</td>
-              <td>{{ pessoa.cpf }}</td>
+              <td>{{ pessoa.cpf || pessoa.cnpj }}</td>
               <td>{{ pessoa.email }}</td>
               <td class="opcoes">
                 <button @click="toggleOpcoes(index)">▾</button>
