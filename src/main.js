@@ -1,10 +1,8 @@
-import VueTheMask from 'vue-the-mask'
 import { createApp } from 'vue'
-import './style.css'
 import App from './App.vue'
+import { vMaska } from 'maska'
 
 const app = createApp(App)
-
-app.use(VueTheMask)
+app.directive('maska', vMaska) 
 
 app.mount('#app')
