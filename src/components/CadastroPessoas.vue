@@ -60,6 +60,14 @@
         <EditarDadosPessoa :pessoa="pessoaSelecionada" @fechar="fecharModal" @atualizado="buscarPessoas" />
       </div>
 
+      <!-- Modal de confirmação de exclusão -->
+      <ConfirmarExclusao
+        v-if="confirmarExclusao"
+        :pessoa="pessoaParaExcluir"
+        @confirmar="confirmarExclusaoPessoa"
+        @cancelar="cancelarExclusao"
+      />
+
     </div>
   </template>
   
@@ -67,11 +75,13 @@
   import axios from 'axios'
   import InserirDadosPessoa from './InserirDadosPessoa.vue'
   import EditarDadosPessoa from './EditarDadosPessoa.vue'
+  import ConfirmarExclusao from './ConfirmarExclusao.vue'
   
   export default {
     components: {
       InserirDadosPessoa,
       EditarDadosPessoa,
+      ConfirmarExclusao,
     },
     data() {
       return {
@@ -83,6 +93,9 @@
         opcaoAtiva: null,
         modalAberto: false,
         pessoaSelecionada: null,
+        confirmarExclusao: false,
+        pessoaParaExcluir: null,
+        indiceParaExcluir: null,
       }
     },
     computed: {
@@ -100,7 +113,26 @@
         this.modalAberto = 'editar' 
       },
       excluirPessoa(index) {
-        this.pessoas.splice(index, 1)
+        this.pessoaParaExcluir = this.pessoas[index]
+        this.indiceParaExcluir = index
+        this.confirmarExclusao = true
+      },
+      async confirmarExclusaoPessoa() {
+        try {
+            await axios.delete(`http://localhost:8080/pessoas/${this.pessoaParaExcluir.id}`)
+            this.pessoas.splice(this.indiceParaExcluir, 1)
+            this.confirmarExclusao = false
+            this.pessoaParaExcluir = null
+            this.indiceParaExcluir = null
+        } catch (error) {
+            console.error('Erro ao excluir pessoa:', error)
+            alert('Erro ao excluir a pessoa. Tente novamente.')
+        }
+      },
+      cancelarExclusao() {
+        this.confirmarExclusao = false
+        this.pessoaParaExcluir = null
+        this.indiceParaExcluir = null
       },
       abrirModal() {
         this.modalAberto = true
