@@ -5,9 +5,18 @@
       <div class="content-container">
         <h3>Pesquisa</h3>
         <div class="pesquisa-content">
-          <input type="text" v-model="filtros.nome" placeholder="Nome" required />
-          <input type="text" v-model="filtros.cpf" placeholder="CPF" required />
-          <button :disabled="!filtros.nome && !filtros.cpf">Filtrar</button>
+          <input type="text" v-model="filtros.nome" placeholder="Nome" />
+  
+          <input
+            type="text"
+            v-model="filtros.cpf"
+            v-maska="{ mask: mascaraCpfOuCnpj }"
+            placeholder="CPF ou CNPJ"
+            />
+  
+          <button :disabled="!filtros.nome && !filtros.cpf" @click="filtrarPessoas">
+            Filtrar
+          </button>
           <button class="adicionar" @click="abrirModal">
             <span>+</span> Adicionar
           </button>
@@ -21,7 +30,11 @@
               <th>E-mail</th>
               <th>Opções</th>
             </tr>
-            <tr v-for="(pessoa, index) in pessoas" :key="index" :class="{ 'linha-cinza': index % 2 === 0 }">
+            <tr
+              v-for="(pessoa, index) in pessoas"
+              :key="index"
+              :class="{ 'linha-cinza': index % 2 === 0 }"
+            >
               <td>{{ pessoa.nome }}</td>
               <td>{{ pessoa.cpf }}</td>
               <td>{{ pessoa.email }}</td>
@@ -41,49 +54,87 @@
       <div v-if="modalAberto" class="modal">
         <InserirDadosPessoa @fechar="fecharModal" />
       </div>
+
+      <!-- Modal de edição -->
+      <div v-if="modalAberto === 'editar'" class="modal">
+        <EditarDadosPessoa :pessoa="pessoaSelecionada" @fechar="fecharModal" @atualizado="buscarPessoas" />
+      </div>
+
     </div>
   </template>
   
   <script>
-  import InserirDadosPessoa from './InserirDadosPessoa.vue';
+  import axios from 'axios'
+  import InserirDadosPessoa from './InserirDadosPessoa.vue'
+  import EditarDadosPessoa from './EditarDadosPessoa.vue'
   
   export default {
     components: {
       InserirDadosPessoa,
+      EditarDadosPessoa,
     },
     data() {
       return {
         filtros: {
-          nome: '',
-          cpf: '',
+        nome: '',
+        cpf: '',
         },
-        pessoas: [
-          { nome: 'João Silva', cpf: '123.456.789-00', email: 'joao@email.com' },
-          { nome: 'Maria Oliveira', cpf: '987.654.321-00', email: 'maria@email.com' },
-          { nome: 'Carlos Souza', cpf: '456.789.123-00', email: 'carlos@email.com' },
-        ],
+        pessoas: [],
         opcaoAtiva: null,
         modalAberto: false,
-      };
+        pessoaSelecionada: null,
+      }
+    },
+    computed: {
+        mascaraCpfOuCnpj() {
+            const onlyNumbers = this.filtros.cpf.replace(/\D/g, '')
+            return onlyNumbers.length > 11 ? '##.###.###/####-##' : '###.###.###-##'
+        },
     },
     methods: {
       toggleOpcoes(index) {
-        this.opcaoAtiva = this.opcaoAtiva === index ? null : index;
+        this.opcaoAtiva = this.opcaoAtiva === index ? null : index
       },
       editarPessoa(pessoa) {
-        alert(`Editar: ${pessoa.nome}`);
+        this.pessoaSelecionada = pessoa
+        this.modalAberto = 'editar' 
       },
       excluirPessoa(index) {
-        this.pessoas.splice(index, 1);
+        this.pessoas.splice(index, 1)
       },
       abrirModal() {
-        this.modalAberto = true;
+        this.modalAberto = true
       },
       fecharModal() {
-        this.modalAberto = false;
+        this.modalAberto = false
+        this.pessoaSelecionada = null
+        this.buscarPessoas()
+      },
+      async buscarPessoas() {
+        try {
+          const response = await axios.get('http://localhost:8080/pessoas')
+          this.pessoas = response.data
+        } catch (error) {
+          console.error('Erro ao buscar pessoas:', error)
+        }
+      },
+      async filtrarPessoas() {
+        try {
+          const params = {}
+          if (this.filtros.nome) params.nome = this.filtros.nome
+          if (this.filtros.cpf) params.cpf = this.filtros.cpf
+  
+          const response = await axios.get('http://localhost:8080/pessoas', { params })
+          this.pessoas = response.data
+        } catch (error) {
+          console.error('Erro ao filtrar pessoas:', error)
+        }
       },
     },
-  };
+    mounted() {
+      this.buscarPessoas()
+    },
+  }
   </script>
   
   <style scoped>
@@ -91,7 +142,7 @@
     width: 90%;
     height: 90vh;
     margin: 20px auto;
-    background: #e4e4e6;
+    background: #eeeeef;
     padding: 20px;
     border-radius: 8px;
   }
@@ -127,7 +178,8 @@
   }
   
   button {
-    padding: 10px;
+    padding: 10px 13px;
+    font-size: 15px;
     border: none;
     border-radius: 4px;
     cursor: pointer;
@@ -144,10 +196,11 @@
   }
   
   .adicionar {
-    background: green;
     color: white;
     display: flex;
     align-items: center;
+    font-size: 15px;
+    padding: 10px 13px;
     gap: 13px;
     margin-left: 26rem;
   }
@@ -179,7 +232,7 @@
     background: none;
     border: none;
     font-size: 18px;
-    color: black;
+    color: white;
     background: #1683f8;
   }
   
@@ -197,17 +250,17 @@
   .dropdown button {
     display: block;
     width: 100%;
-    padding: 5px;
+    padding: 10px 12px;
     text-align: left;
     border: none;
     background: none;
+    color: black;
   }
   
   .dropdown button:hover {
     background: #f1f1f1;
   }
   
-  /* Modal */
   .modal {
     position: fixed;
     top: 0;
