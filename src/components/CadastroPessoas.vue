@@ -110,8 +110,9 @@
         this.opcaoAtiva = this.opcaoAtiva === index ? null : index
       },
       editarPessoa(pessoa) {
+        this.opcaoAtiva = null 
         this.pessoaSelecionada = pessoa
-        this.modalAberto = 'editar' 
+        this.modalAberto = 'editar'
       },
       excluirPessoa(index) {
         this.pessoaParaExcluir = this.pessoas[index]
@@ -136,12 +137,27 @@
         this.indiceParaExcluir = null
       },
       abrirModal() {
+        this.opcaoAtiva = null 
         this.modalAberto = true
-      },
+        },
       fecharModal() {
         this.modalAberto = false
         this.pessoaSelecionada = null
         this.buscarPessoas()
+      },
+      handleClickFora(event) {
+        const dropdowns = this.$el.querySelectorAll('.dropdown')
+        let clicouDentro = false
+
+        dropdowns.forEach(drop => {
+        if (drop.contains(event.target)) {
+            clicouDentro = true
+        }
+        })
+
+        if (!clicouDentro && !event.target.closest('.opcoes')) {
+        this.opcaoAtiva = null
+        }
       },
       async buscarPessoas() {
         try {
@@ -190,7 +206,11 @@
         },
     },
     mounted() {
-      this.buscarPessoas()
+        this.buscarPessoas()
+        document.addEventListener('click', this.handleClickFora)
+    },
+    beforeUnmount() {
+        document.removeEventListener('click', this.handleClickFora)
     },
   }
   </script>
