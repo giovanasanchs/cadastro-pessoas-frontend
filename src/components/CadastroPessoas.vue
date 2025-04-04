@@ -6,14 +6,12 @@
         <h3>Pesquisa</h3>
         <div class="pesquisa-content">
           <input type="text" v-model="filtros.nome" placeholder="Nome" />
-  
           <input
             type="text"
             v-model="filtros.cpf"
-            v-maska="{ mask: mascaraCpfOuCnpj }"
-            placeholder="CPF ou CNPJ"
+            @input="formatarBuscaCpfOuCnpj"
+            placeholder="CPF"
             />
-  
           <button :disabled="!filtros.nome && !filtros.cpf" @click="filtrarPessoas">
             Filtrar
           </button>
@@ -29,6 +27,9 @@
               <th>CPF</th>
               <th>E-mail</th>
               <th>Opções</th>
+            </tr>
+            <tr v-if="pessoas.length === 0">
+                <td colspan="4" style="text-align: center;">Nenhuma pessoa encontrada.</td>
             </tr>
             <tr
               v-for="(pessoa, index) in pessoas"
@@ -162,6 +163,31 @@
           console.error('Erro ao filtrar pessoas:', error)
         }
       },
+      formatarBuscaCpfOuCnpj() {
+            let valor = this.filtros.cpf.replace(/\D/g, '')
+            if (valor.length <= 11) {
+            this.filtros.cpf = this.formatarCPF(valor)
+            } else {
+            this.filtros.cpf = this.formatarCNPJ(valor)
+            }
+        },
+        formatarCPF(valor) {
+            valor = valor.replace(/\D/g, '')
+            if (valor.length > 11) valor = valor.slice(0, 11)
+            valor = valor.replace(/(\d{3})(\d)/, '$1.$2')
+            valor = valor.replace(/(\d{3})(\d)/, '$1.$2')
+            valor = valor.replace(/(\d{3})(\d{1,2})$/, '$1-$2')
+            return valor
+        },
+        formatarCNPJ(valor) {
+            valor = valor.replace(/\D/g, '')
+            if (valor.length > 14) valor = valor.slice(0, 14)
+            valor = valor.replace(/^(\d{2})(\d)/, '$1.$2')
+            valor = valor.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
+            valor = valor.replace(/\.(\d{3})(\d)/, '.$1/$2')
+            valor = valor.replace(/(\d{4})(\d)/, '$1-$2')
+            return valor
+        },
     },
     mounted() {
       this.buscarPessoas()
